@@ -2,7 +2,6 @@ import React, {useRef, useState} from 'react';
 import {FileText, Info, Lock, LogOut, Printer, Save, Unlock, Upload, X} from 'lucide-react';
 
 // Клас для валідації ключа
-// Перевіряє чи ключ не порожній, чи є числом і, чи воно позитивне
 class KeyValidator {
     static validate(key: string): { isValid: boolean; error?: string } {
         if (!key.trim()) {
@@ -16,6 +15,72 @@ class KeyValidator {
 
         if (keyNum < 0) {
             return {isValid: false, error: 'Ключ повинен бути позитивним числом'};
+        }
+
+        return {isValid: true};
+    }
+
+    // Валідація 2-вимірного вектора (a, b)
+    static validate2DVector(vectorStr: string): { isValid: boolean; error?: string; vector?: [number, number] } {
+        if (!vectorStr.trim()) {
+            return {isValid: false, error: 'Вектор не може бути порожнім'};
+        }
+
+        const parts = vectorStr.split(',').map(s => s.trim());
+        if (parts.length !== 2) {
+            return {isValid: false, error: 'Вектор повинен містити 2 числа через кому (a, b)'};
+        }
+
+        const a = parseFloat(parts[0]);
+        const b = parseFloat(parts[1]);
+
+        if (isNaN(a) || isNaN(b)) {
+            return {isValid: false, error: 'Всі коефіцієнти повинні бути числами'};
+        }
+
+        return {isValid: true, vector: [a, b]};
+    }
+
+    // Валідація 3-вимірного вектора (a, b, c)
+    static validate3DVector(vectorStr: string): {
+        isValid: boolean;
+        error?: string;
+        vector?: [number, number, number]
+    } {
+        if (!vectorStr.trim()) {
+            return {isValid: false, error: 'Вектор не може бути порожнім'};
+        }
+
+        const parts = vectorStr.split(',').map(s => s.trim());
+        if (parts.length !== 3) {
+            return {isValid: false, error: 'Вектор повинен містити 3 числа через кому (a, b, c)'};
+        }
+
+        const a = parseFloat(parts[0]);
+        const b = parseFloat(parts[1]);
+        const c = parseFloat(parts[2]);
+
+        if (isNaN(a) || isNaN(b) || isNaN(c)) {
+            return {isValid: false, error: 'Всі коефіцієнти повинні бути числами'};
+        }
+
+        return {isValid: true, vector: [a, b, c]};
+    }
+
+    // Валідація текстового ключа (пароля)
+    static validatePassword(password: string, language: 'uk' | 'en'): { isValid: boolean; error?: string } {
+        if (!password.trim()) {
+            return {isValid: false, error: 'Пароль не може бути порожнім'};
+        }
+
+        const ukPattern = /^[а-яёіїєґА-ЯЁІЇЄҐ]+$/;
+        const enPattern = /^[a-zA-Z]+$/;
+
+        const pattern = language === 'uk' ? ukPattern : enPattern;
+
+        if (!pattern.test(password)) {
+            const langName = language === 'uk' ? 'українські' : 'англійські';
+            return {isValid: false, error: `Пароль повинен містити лише ${langName} літери`};
         }
 
         return {isValid: true};
@@ -90,12 +155,156 @@ class CaesarCipher {
     }
 }
 
+// Клас для шифру Тритеміуса
+class TrithemiusCipher {
+    private static readonly UK_ALPHABET = 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя';
+    private static readonly EN_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
+
+    // Шифрування з лінійним ключем (2D вектор: a*i + b)
+    static encryptLinear2D(text: string, vector: [number, number], language: 'uk' | 'en'): string {
+        const alphabet = language === 'uk' ? this.UK_ALPHABET : this.EN_ALPHABET;
+        const n = alphabet.length;
+        const [a, b] = vector;
+
+        return text.split('').map((char, i) => {
+            const lowerChar = char.toLowerCase();
+            const index = alphabet.indexOf(lowerChar);
+
+            if (index === -1) {
+                return char;
+            }
+
+            const shift = Math.floor(a * i + b) % n;
+            const encryptedIndex = (index + shift) % n;
+            const encryptedChar = alphabet[encryptedIndex];
+
+            return char === char.toUpperCase() ? encryptedChar.toUpperCase() : encryptedChar;
+        }).join('');
+    }
+
+    // Розшифрування з лінійним ключем (2D вектор)
+    static decryptLinear2D(text: string, vector: [number, number], language: 'uk' | 'en'): string {
+        const alphabet = language === 'uk' ? this.UK_ALPHABET : this.EN_ALPHABET;
+        const n = alphabet.length;
+        const [a, b] = vector;
+
+        return text.split('').map((char, i) => {
+            const lowerChar = char.toLowerCase();
+            const index = alphabet.indexOf(lowerChar);
+
+            if (index === -1) {
+                return char;
+            }
+
+            const shift = Math.floor(a * i + b) % n;
+            const decryptedIndex = (index + n - (shift % n)) % n;
+            const decryptedChar = alphabet[decryptedIndex];
+
+            return char === char.toUpperCase() ? decryptedChar.toUpperCase() : decryptedChar;
+        }).join('');
+    }
+
+    // Шифрування з квадратичним ключем (3D вектор: a*i² + b*i + c)
+    static encryptQuadratic3D(text: string, vector: [number, number, number], language: 'uk' | 'en'): string {
+        const alphabet = language === 'uk' ? this.UK_ALPHABET : this.EN_ALPHABET;
+        const n = alphabet.length;
+        const [a, b, c] = vector;
+
+        return text.split('').map((char, i) => {
+            const lowerChar = char.toLowerCase();
+            const index = alphabet.indexOf(lowerChar);
+
+            if (index === -1) {
+                return char;
+            }
+
+            const shift = Math.floor(a * i * i + b * i + c) % n;
+            const encryptedIndex = (index + shift) % n;
+            const encryptedChar = alphabet[encryptedIndex];
+
+            return char === char.toUpperCase() ? encryptedChar.toUpperCase() : encryptedChar;
+        }).join('');
+    }
+
+    // Розшифрування з квадратичним ключем (3D вектор)
+    static decryptQuadratic3D(text: string, vector: [number, number, number], language: 'uk' | 'en'): string {
+        const alphabet = language === 'uk' ? this.UK_ALPHABET : this.EN_ALPHABET;
+        const n = alphabet.length;
+        const [a, b, c] = vector;
+
+        return text.split('').map((char, i) => {
+            const lowerChar = char.toLowerCase();
+            const index = alphabet.indexOf(lowerChar);
+
+            if (index === -1) {
+                return char;
+            }
+
+            const shift = Math.floor(a * i * i + b * i + c) % n;
+            const decryptedIndex = (index + n - (shift % n)) % n;
+            const decryptedChar = alphabet[decryptedIndex];
+
+            return char === char.toUpperCase() ? decryptedChar.toUpperCase() : decryptedChar;
+        }).join('');
+    }
+
+    // Шифрування з текстовим ключем (паролем)
+    static encryptPassword(text: string, password: string, language: 'uk' | 'en'): string {
+        const alphabet = language === 'uk' ? this.UK_ALPHABET : this.EN_ALPHABET;
+        const n = alphabet.length;
+
+        return text.split('').map((char, i) => {
+            const lowerChar = char.toLowerCase();
+            const index = alphabet.indexOf(lowerChar);
+
+            if (index === -1) {
+                return char;
+            }
+
+            const keyChar = password[i % password.length].toLowerCase();
+            const keyIndex = alphabet.indexOf(keyChar);
+            const shift = keyIndex !== -1 ? keyIndex : 0;
+
+            const encryptedIndex = (index + shift) % n;
+            const encryptedChar = alphabet[encryptedIndex];
+
+            return char === char.toUpperCase() ? encryptedChar.toUpperCase() : encryptedChar;
+        }).join('');
+    }
+
+    // Розшифрування з текстовим ключем (паролем)
+    static decryptPassword(text: string, password: string, language: 'uk' | 'en'): string {
+        const alphabet = language === 'uk' ? this.UK_ALPHABET : this.EN_ALPHABET;
+        const n = alphabet.length;
+
+        return text.split('').map((char, i) => {
+            const lowerChar = char.toLowerCase();
+            const index = alphabet.indexOf(lowerChar);
+
+            if (index === -1) {
+                return char;
+            }
+
+            const keyChar = password[i % password.length].toLowerCase();
+            const keyIndex = alphabet.indexOf(keyChar);
+            const shift = keyIndex !== -1 ? keyIndex : 0;
+
+            const decryptedIndex = (index + n - (shift % n)) % n;
+            const decryptedChar = alphabet[decryptedIndex];
+
+            return char === char.toUpperCase() ? decryptedChar.toUpperCase() : decryptedChar;
+        }).join('');
+    }
+}
+
 // Основний React-компонент програми
 const CaesarCipherApp: React.FC = () => {
     const [text, setText] = useState<string>(''); // введений текст
-    const [key, setKey] = useState<string>(''); // ключ шифру
+    const [key, setKey] = useState<string>(''); // ключ шифру Цезаря
     const [result, setResult] = useState<string>(''); // результат шифрування/розшифрування
-    const [language, setLanguage] = useState<'uk' | 'en'>('uk');  // обрана мова
+    const [language, setLanguage] = useState<'uk' | 'en'>('uk'); // обрана мова
+    const [cipherType, setCipherType] = useState<'caesar' | 'trithemius'>('caesar'); // Тип шифру
+    const [trithemiusKeyType, setTrithemiusKeyType] = useState<'linear2d' | 'quadratic3d' | 'password'>('linear2d'); // Тип ключа для шифру Тритеміуса
     const [showAbout, setShowAbout] = useState(false); // показ вікна "Про програму"
     const [fileName, setFileName] = useState<string>(''); // назва завантаженого файлу
     const [showExitConfirm, setShowExitConfirm] = useState(false); // показ вікна підтвердження виходу
@@ -103,40 +312,110 @@ const CaesarCipherApp: React.FC = () => {
 
     // Функція шифрування тексту після валідації ключа і тексту
     const handleEncrypt = () => {
-        const keyValidation = KeyValidator.validate(key);
-        if (!keyValidation.isValid) {
-            alert(keyValidation.error);
-            return;
-        }
+        if (cipherType === 'caesar') {
+            const keyValidation = KeyValidator.validate(key);
+            if (!keyValidation.isValid) {
+                alert(keyValidation.error);
+                return;
+            }
 
-        const textValidation = TextValidator.validate(text, language);
-        if (!textValidation.isValid) {
-            alert(textValidation.error);
-            return;
-        }
+            const textValidation = TextValidator.validate(text, language);
+            if (!textValidation.isValid) {
+                alert(textValidation.error);
+                return;
+            }
 
-        const keyNum = parseInt(key);
-        const encrypted = CaesarCipher.encrypt(text, keyNum, language);
-        setResult(encrypted);
+            const keyNum = parseInt(key);
+            const encrypted = CaesarCipher.encrypt(text, keyNum, language);
+            setResult(encrypted);
+        } else {
+            // Тритеміус
+            const textValidation = TextValidator.validate(text, language);
+            if (!textValidation.isValid) {
+                alert(textValidation.error);
+                return;
+            }
+
+            if (trithemiusKeyType === 'linear2d') {
+                const vectorValidation = KeyValidator.validate2DVector(key);
+                if (!vectorValidation.isValid) {
+                    alert(vectorValidation.error);
+                    return;
+                }
+                const encrypted = TrithemiusCipher.encryptLinear2D(text, vectorValidation.vector!, language);
+                setResult(encrypted);
+            } else if (trithemiusKeyType === 'quadratic3d') {
+                const vectorValidation = KeyValidator.validate3DVector(key);
+                if (!vectorValidation.isValid) {
+                    alert(vectorValidation.error);
+                    return;
+                }
+                const encrypted = TrithemiusCipher.encryptQuadratic3D(text, vectorValidation.vector!, language);
+                setResult(encrypted);
+            } else if (trithemiusKeyType === 'password') {
+                const passwordValidation = KeyValidator.validatePassword(key, language);
+                if (!passwordValidation.isValid) {
+                    alert(passwordValidation.error);
+                    return;
+                }
+                const encrypted = TrithemiusCipher.encryptPassword(text, key, language);
+                setResult(encrypted);
+            }
+        }
     };
 
     // Функція розшифрування тексту після валідації
     const handleDecrypt = () => {
-        const keyValidation = KeyValidator.validate(key);
-        if (!keyValidation.isValid) {
-            alert(keyValidation.error);
-            return;
-        }
+        if (cipherType === 'caesar') {
+            const keyValidation = KeyValidator.validate(key);
+            if (!keyValidation.isValid) {
+                alert(keyValidation.error);
+                return;
+            }
 
-        const textValidation = TextValidator.validate(text, language);
-        if (!textValidation.isValid) {
-            alert(textValidation.error);
-            return;
-        }
+            const textValidation = TextValidator.validate(text, language);
+            if (!textValidation.isValid) {
+                alert(textValidation.error);
+                return;
+            }
 
-        const keyNum = parseInt(key);
-        const decrypted = CaesarCipher.decrypt(text, keyNum, language);
-        setResult(decrypted);
+            const keyNum = parseInt(key);
+            const decrypted = CaesarCipher.decrypt(text, keyNum, language);
+            setResult(decrypted);
+        } else {
+            // Тритеміус
+            const textValidation = TextValidator.validate(text, language);
+            if (!textValidation.isValid) {
+                alert(textValidation.error);
+                return;
+            }
+
+            if (trithemiusKeyType === 'linear2d') {
+                const vectorValidation = KeyValidator.validate2DVector(key);
+                if (!vectorValidation.isValid) {
+                    alert(vectorValidation.error);
+                    return;
+                }
+                const decrypted = TrithemiusCipher.decryptLinear2D(text, vectorValidation.vector!, language);
+                setResult(decrypted);
+            } else if (trithemiusKeyType === 'quadratic3d') {
+                const vectorValidation = KeyValidator.validate3DVector(key);
+                if (!vectorValidation.isValid) {
+                    alert(vectorValidation.error);
+                    return;
+                }
+                const decrypted = TrithemiusCipher.decryptQuadratic3D(text, vectorValidation.vector!, language);
+                setResult(decrypted);
+            } else if (trithemiusKeyType === 'password') {
+                const passwordValidation = KeyValidator.validatePassword(key, language);
+                if (!passwordValidation.isValid) {
+                    alert(passwordValidation.error);
+                    return;
+                }
+                const decrypted = TrithemiusCipher.decryptPassword(text, key, language);
+                setResult(decrypted);
+            }
+        }
     };
 
     // Завантаження текстового файлу і встановлення його в textarea
@@ -182,6 +461,7 @@ const CaesarCipherApp: React.FC = () => {
 
         const printWindow = window.open('', '_blank');
         if (printWindow) {
+            const cipherName = cipherType === 'caesar' ? 'Шифр Цезаря' : 'Шифр Тритеміуса';
             printWindow.document.write(`
         <html>
           <head>
@@ -194,7 +474,7 @@ const CaesarCipherApp: React.FC = () => {
           </head>
           <body>
             <div class="header">
-              <h1>Шифр Цезаря</h1>
+              <h1>${cipherName}</h1>
               <p><strong>Мова:</strong> ${language === 'uk' ? 'Українська' : 'Англійська'}</p>
               <p><strong>Ключ:</strong> ${key}</p>
             </div>
@@ -218,13 +498,33 @@ const CaesarCipherApp: React.FC = () => {
         setFileName('');
     };
 
+    // Допоміжний метод для отримання опису поля
+    const getKeyPlaceholder = () => {
+        if (cipherType === 'caesar') {
+            return 'Введіть числовий ключ';
+        }
+
+        switch (trithemiusKeyType) {
+            case 'linear2d':
+                return 'Введіть коефіцієнти a, b (наприклад: 2, 3)';
+            case 'quadratic3d':
+                return 'Введіть коефіцієнти a, b, c (наприклад: 1, 2, 3)';
+            case 'password':
+                return 'Введіть текстовий пароль';
+            default:
+                return '';
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <header className="bg-white shadow-md">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                         <Lock className="h-8 w-8 text-indigo-600"/>
-                        <h1 className="text-2xl font-bold text-gray-800">Шифр Цезаря</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">
+                            Криптосистема Цезаря та Тритеміуса
+                        </h1>
                     </div>
 
                     <nav className="flex space-x-4">
@@ -257,9 +557,7 @@ const CaesarCipherApp: React.FC = () => {
                             <span>Про програму</span>
                         </button>
                         <button
-                            onClick={() => {
-                                setShowExitConfirm(true);
-                            }}
+                            onClick={() => setShowExitConfirm(true)}
                             className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                         >
                             <LogOut className="h-4 w-4"/>
@@ -280,7 +578,24 @@ const CaesarCipherApp: React.FC = () => {
             <main className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <div className="bg-white rounded-lg shadow-md p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Тип шифру
+                                </label>
+                                <select
+                                    value={cipherType}
+                                    onChange={(e) => {
+                                        setCipherType(e.target.value as 'caesar' | 'trithemius');
+                                        setKey('');
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="caesar">Шифр Цезаря</option>
+                                    <option value="trithemius">Шифр Тритеміуса</option>
+                                </select>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Мова
@@ -295,20 +610,51 @@ const CaesarCipherApp: React.FC = () => {
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Ключ шифрування
-                                </label>
-                                <input
-                                    type="number"
-                                    value={key}
-                                    onChange={(e) => setKey(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="Введіть числовий ключ"
-                                    min="0"
-                                />
-                            </div>
+                            {cipherType === 'trithemius' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Тип ключа Тритеміуса
+                                    </label>
+                                    <select
+                                        value={trithemiusKeyType}
+                                        onChange={(e) => {
+                                            setTrithemiusKeyType(e.target.value as 'linear2d' | 'quadratic3d' | 'password');
+                                            setKey('');
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="linear2d">Лінійний (2D вектор)</option>
+                                        <option value="quadratic3d">Квадратичний (3D вектор)</option>
+                                        <option value="password">Текстовий пароль</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {cipherType === 'caesar' ? 'Ключ шифрування' : `Ключ ${
+                                trithemiusKeyType === 'linear2d' ? 'лінійного рівняння (a, b)' :
+                                    trithemiusKeyType === 'quadratic3d' ? 'квадратичного рівняння (a, b, c)' :
+                                        'текстовий пароль'
+                            }`}
+                        </label>
+                        <input
+                            type={cipherType === 'caesar' ? 'number' : 'text'}
+                            value={key}
+                            onChange={(e) => setKey(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder={getKeyPlaceholder()}
+                            min={cipherType === 'caesar' ? "0" : undefined}
+                        />
+                        {cipherType === 'trithemius' && (
+                            <div className="mt-2 text-xs text-gray-500">
+                                {trithemiusKeyType === 'linear2d' && 'Формула: ключ[i] = a * i + b'}
+                                {trithemiusKeyType === 'quadratic3d' && 'Формула: ключ[i] = a * i² + b * i + c'}
+                                {trithemiusKeyType === 'password' && 'Використовується циклічно для кожного символу'}
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-white rounded-lg shadow-md p-6">
@@ -364,7 +710,7 @@ const CaesarCipherApp: React.FC = () => {
 
             {showAbout && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6">
+                    <div className="bg-white rounded-lg max-w-lg w-full p-6">
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-lg font-bold text-gray-800">Про програму</h3>
                             <button
@@ -377,27 +723,46 @@ const CaesarCipherApp: React.FC = () => {
 
                         <div className="space-y-3 text-sm text-gray-600">
                             <p>
-                                <strong>Криптосистема на основі шифру Цезаря</strong>
+                                <strong>Криптосистема на основі шифрів Цезаря та Тритеміуса</strong>
                             </p>
                             <p>
-                                Шифр Цезаря - один з найдавніших методів шифрування, названий на честь
-                                римського імператора Гая Юлія Цезаря.
+                                Програма реалізує два класичні методи симетричного шифрування:
                             </p>
-                            <p>
-                                <strong>Можливості:</strong>
-                            </p>
-                            <ul className="list-disc list-inside ml-2 space-y-1">
-                                <li>Шифрування та розшифрування тексту</li>
-                                <li>Підтримка української та англійської мов</li>
-                                <li>Робота з файлами (.txt)</li>
-                                <li>Валідація введених даних</li>
-                                <li>Збереження та друк результатів</li>
-                            </ul>
+
+                            <div className="mt-4">
+                                <p><strong>Шифр Цезаря:</strong></p>
+                                <ul className="list-disc list-inside ml-2 space-y-1">
+                                    <li>Простий зсув на фіксовану кількість позицій</li>
+                                    <li>Числовий ключ (0 або більше)</li>
+                                </ul>
+                            </div>
+
+                            <div className="mt-4">
+                                <p><strong>Шифр Тритеміуса:</strong></p>
+                                <ul className="list-disc list-inside ml-2 space-y-1">
+                                    <li><strong>Лінійний (2D):</strong> зсув за формулою a*i + b</li>
+                                    <li><strong>Квадратичний (3D):</strong> зсув за формулою a*i² + b*i + c</li>
+                                    <li><strong>Текстовий ключ:</strong> циклічне використання букв пароля</li>
+                                </ul>
+                            </div>
+
+                            <div className="mt-4">
+                                <p><strong>Можливості:</strong></p>
+                                <ul className="list-disc list-inside ml-2 space-y-1">
+                                    <li>Шифрування та розшифрування тексту</li>
+                                    <li>Підтримка української та англійської мов</li>
+                                    <li>Робота з файлами (.txt)</li>
+                                    <li>Валідація введених даних</li>
+                                    <li>Збереження та друк результатів</li>
+                                    <li>Різні типи ключів для методу Тритеміуса</li>
+                                </ul>
+                            </div>
+
                             <p className="pt-2">
                                 <strong>Розробник:</strong> Студент групи ТВ-23 Бобела Денис
                             </p>
                             <p>
-                                <strong>Версія:</strong> 1.0
+                                <strong>Версія:</strong> 2.0
                             </p>
                         </div>
                     </div>
