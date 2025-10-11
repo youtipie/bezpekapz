@@ -78,6 +78,14 @@ export class KeyValidator {
 
         return { isValid: true };
     }
+
+    // Валідація ключа-вірша
+    static validateVerseKey(key: string): { isValid: boolean; error?: string } {
+        if (!key.trim()) {
+            return { isValid: false, error: 'Ключ-вірш не може бути порожнім' };
+        }
+        return { isValid: true };
+    }
 }
 
 // Клас для валідації тексту

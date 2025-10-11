@@ -7,6 +7,7 @@ export const CipherPage: React.FC<{
     keyLabel: string;
     keyPlaceholder: string;
     keyType?: 'number' | 'text';
+    keyComponent?: 'input' | 'textarea'; // Нова властивість для вибору компонента ключа
     helpText?: string;
     onEncrypt: (text: string, key: string, language: 'uk' | 'en') => string;
     onDecrypt: (text: string, key: string, language: 'uk' | 'en') => string;
@@ -23,11 +24,12 @@ export const CipherPage: React.FC<{
           keyLabel,
           keyPlaceholder,
           keyType = 'text',
+          keyComponent = 'input',
           helpText,
           onEncrypt,
           onDecrypt,
           validateKey,
-          sharedState
+          sharedState,
       }) => {
     const [key, setKey] = useState<string>('');
     const [language, setLanguage] = useState<'uk' | 'en'>('uk');
@@ -104,14 +106,24 @@ export const CipherPage: React.FC<{
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         {keyLabel}
                     </label>
-                    <input
-                        type={keyType}
-                        value={key}
-                        onChange={(e) => setKey(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder={keyPlaceholder}
-                        min={keyType === 'number' ? "0" : undefined}
-                    />
+                    {keyComponent === 'input' ? (
+                        <input
+                            type={keyType}
+                            value={key}
+                            onChange={(e) => setKey(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder={keyPlaceholder}
+                            min={keyType === 'number' ? "0" : undefined}
+                        />
+                    ) : (
+                        <textarea
+                            value={key}
+                            onChange={(e) => setKey(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            rows={8}
+                            placeholder={keyPlaceholder}
+                        />
+                    )}
                     {helpText && (
                         <div className="mt-2 text-xs text-gray-500">
                             {helpText}

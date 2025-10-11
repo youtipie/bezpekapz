@@ -24,6 +24,8 @@ export const Header: React.FC<{
                 return 'Тритеміус (Квадратичний)';
             case '/trithemius-password':
                 return 'Тритеміус (Пароль)';
+            case '/verse-cipher':
+                return 'Віршований шифр';
             default:
                 return 'Шифр Цезаря';
         }
@@ -89,6 +91,15 @@ export const Header: React.FC<{
                                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         >
                                             Тритеміус (Текстовий пароль)
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                navigate('/verse-cipher');
+                                                setIsDropdownOpen(false);
+                                            }}
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        >
+                                            Віршований шифр
                                         </button>
                                     </div>
                                 </div>

@@ -1,12 +1,13 @@
 import {BrowserRouter, Route, Routes} from "react-router";
-import {Header} from "./components/Header";
-import {CaesarPage} from "./pages/CaesarPage";
-import {TrithemiusLinearPage} from "./pages/TrithemiusLinearPage";
-import {TrithemiusQuadraticPage} from "./pages/TrithemiusQuadraticPage";
+import {Header} from "./components/Header.tsx";
+import {CaesarPage} from "./pages/CaesarPage.tsx";
+import {TrithemiusLinearPage} from "./pages/TrithemiusLinearPage.tsx";
+import {TrithemiusQuadraticPage} from "./pages/TrithemiusQuadraticPage.tsx";
 import {TrithemiusPasswordPage} from "./pages/TrithemiusPasswordPage.tsx";
 import {AboutModal} from "./components/AboutModal.tsx";
-import {useRef, useState} from "react";
+import React, {useRef, useState} from "react";
 import {ExitModal} from "./components/ExitModal.tsx";
+import {VersePage} from "./pages/VersePage.tsx"; // Імпорт нової сторінки
 
 const App: React.FC = () => {
     // Спільний стан для всіх сторінок
@@ -52,7 +53,7 @@ const App: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileName || 'encrypted_text.txt';
+        link.download = fileName.replace('.txt', '') + '_processed.txt' || 'processed_text.txt';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -73,7 +74,7 @@ const App: React.FC = () => {
                   <head>
                     <title>Результат шифрування</title>
                     <style>
-                      body { font-family: Arial, sans-serif; padding: 20px; }
+                      body { font-family: Arial, sans-serif; padding: 20px; white-space: pre-wrap; word-wrap: break-word; }
                       .header { margin-bottom: 20px; }
                       .content { line-height: 1.6; }
                     </style>
@@ -111,6 +112,7 @@ const App: React.FC = () => {
                     <Route path="/trithemius-linear" element={<TrithemiusLinearPage sharedState={sharedState}/>}/>
                     <Route path="/trithemius-quadratic" element={<TrithemiusQuadraticPage sharedState={sharedState}/>}/>
                     <Route path="/trithemius-password" element={<TrithemiusPasswordPage sharedState={sharedState}/>}/>
+                    <Route path="/verse-cipher" element={<VersePage sharedState={sharedState}/>}/>
                 </Routes>
 
                 {showAbout && <AboutModal onClose={() => setShowAbout(false)}/>}
